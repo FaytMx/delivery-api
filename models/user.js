@@ -10,7 +10,7 @@ User.getAll = () => {
 };
 
 User.findById = (id, callback) => {
-  const sql = `SELECT id,email, name, lastname, image, phone, password, session_token FROM users WHERE id = $1`;
+  const sql = /*sql*/ `SELECT id,email, name, lastname, image, phone, password, session_token FROM users WHERE id = $1`;
 
   return db.oneOrNone(sql, id).then((user) => {
     callback(null, user);
@@ -18,7 +18,19 @@ User.findById = (id, callback) => {
 };
 
 User.findByEmail = (email) => {
-  const sql = `SELECT id,email, name, lastname, image, phone, password, session_token FROM users WHERE email = $1`;
+  const sql = /*sql*/ `SELECT U.id,U.email, U.name, U.lastname, U.image, U.phone, U.password, U.session_token, json_agg(
+      json_build_object(
+        'id', R.id,
+        'name', R.name,
+        'image', R.image,
+        'route', R.route
+      )
+    ) AS roles
+      FROM users as U
+      INNER JOIN user_has_roles as UHR ON UHR.id_user = U.id
+      INNER JOIN roles as R ON R.id = UHR.id_rol
+      WHERE U.email =$1
+      GROUP BY U.id`;
 
   return db.oneOrNone(sql, email);
 };
@@ -44,7 +56,7 @@ User.create = (user) => {
   ]);
 };
 
-User.isPasswordMAtched = (userPassword, hash) => {
+User.isPasswordMatched = (userPassword, hash) => {
   const myPasswordHashed = crypto
     .createHash('md5')
     .update(userPassword)

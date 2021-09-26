@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const keys = require('../config/keys');
+const Rol = require('../models/rol');
 
 module.exports = {
   async getAll(req, res, next) {
@@ -22,9 +23,11 @@ module.exports = {
       const user = req.body;
       const data = await User.create(user);
 
+      await Rol.create(data.id, 1);
+
       return res.status(201).json({
         success: true,
-        message: 'El registro se realizo correctamente',
+        message: 'El registro se realizo correctamente, ahora inicia sesion',
         data: data.id,
       });
     } catch (error) {
@@ -51,7 +54,7 @@ module.exports = {
         });
       }
 
-      if (User.isPasswordMAtched(password, myUser.password)) {
+      if (User.isPasswordMatched(password, myUser.password)) {
         const token = jwt.sign(
           { id: myUser.id, email: myUser.email },
           keys.secretOrKey,
@@ -68,11 +71,15 @@ module.exports = {
           phone: myUser.phone,
           image: myUser.image,
           session_token: `JWT ${token}`,
+          roles: myUser.roles
         };
+
+        console.log('USUARIO ENVIADO: ', data);
 
         return res.status(201).json({
           success: true,
           data: data,
+          message: 'El usuario ha sido autenticado',
         });
       } else {
         return res.status(401).json({
