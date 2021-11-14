@@ -1,20 +1,35 @@
-const User = require('../models/user');
-const jwt = require('jsonwebtoken');
-const keys = require('../config/keys');
-const Rol = require('../models/rol');
-const storage = require('../utils/cloud_storage')
+const User = require("../models/user");
+const jwt = require("jsonwebtoken");
+const keys = require("../config/keys");
+const Rol = require("../models/rol");
+const storage = require("../utils/cloud_storage");
 
 module.exports = {
   async getAll(req, res, next) {
     try {
       const data = await User.getAll();
-      console.log('Usuarios: ', data);
+      console.log("Usuarios: ", data);
       return res.status(200).json(data);
     } catch (error) {
-      console.log('Error: ', error);
+      console.log("Error: ", error);
       return res.status(501).json({
         success: false,
-        message: 'Error al obtener los usuarios',
+        message: "Error al obtener los usuarios",
+      });
+    }
+  },
+
+  async findById(req, res, next) {
+    try {
+      const id = req.params.id;
+      const data = await User.findUserId(id);
+      console.log("Usuario: ", data);
+      return res.status(200).json(data);
+    } catch (error) {
+      console.log("Error: ", error);
+      return res.status(501).json({
+        success: false,
+        message: "Error al obtener el usuario por id",
       });
     }
   },
@@ -28,14 +43,14 @@ module.exports = {
 
       return res.status(201).json({
         success: true,
-        message: 'El registro se realizo correctamente, ahora inicia sesion',
+        message: "El registro se realizo correctamente, ahora inicia sesion",
         data: data.id,
       });
     } catch (error) {
-      console.log('Error: ', error);
+      console.log("Error: ", error);
       return res.status(501).json({
         success: false,
-        message: 'Error al registrar el usuario',
+        message: "Error al registrar el usuario",
         error: error,
       });
     }
@@ -44,14 +59,14 @@ module.exports = {
   async registerWithImage(req, res, next) {
     try {
       const user = JSON.parse(req.body.user);
-      console.log('Datos enviados del usuario: ', user);
+      console.log("Datos enviados del usuario: ", user);
 
       const files = req.files;
 
       if (files.length > 0) {
         const pathImage = `image_${Date.now()}`;
         const url = await storage(files[0], pathImage);
-
+        console.log(url);
         if (url != undefined && url != null) {
           user.image = url;
         }
@@ -63,14 +78,46 @@ module.exports = {
 
       return res.status(201).json({
         success: true,
-        message: 'El registro se realizo correctamente, ahora inicia sesion',
+        message: "El registro se realizo correctamente, ahora inicia sesion",
         data: data.id,
       });
     } catch (error) {
-      console.log('Error: ', error);
+      console.log("Error: ", error);
       return res.status(501).json({
         success: false,
-        message: 'Error al registrar el usuario',
+        message: "Error al registrar el usuario",
+        error: error,
+      });
+    }
+  },
+
+  async update(req, res, next) {
+    try {
+      const user = JSON.parse(req.body.user);
+      console.log("Datos enviados del usuario: ", user);
+
+      const files = req.files;
+
+      if (files.length > 0) {
+        const pathImage = `image_${Date.now()}`;
+        const url = await storage(files[0], pathImage);
+        console.log(url);
+        if (url != undefined && url != null) {
+          user.image = url;
+        }
+      }
+
+      await User.update(user);
+
+      return res.status(201).json({
+        success: true,
+        message: "Los datos del usuario se actualizaron correctamente.",
+      });
+    } catch (error) {
+      console.log("Error: ", error);
+      return res.status(501).json({
+        success: false,
+        message: "Hubo un error con la actualizacion de datos del usuario",
         error: error,
       });
     }
@@ -86,7 +133,7 @@ module.exports = {
       if (!myUser) {
         return res.status(401).json({
           success: false,
-          message: 'El correo no fue encontrado',
+          message: "El correo no fue encontrado",
         });
       }
 
@@ -96,6 +143,7 @@ module.exports = {
           keys.secretOrKey,
           {
             // expiresIn: (60*60*24)
+            expiresIn: 60 * 2,
           }
         );
 
@@ -107,27 +155,48 @@ module.exports = {
           phone: myUser.phone,
           image: myUser.image,
           session_token: `JWT ${token}`,
-          roles: myUser.roles
+          roles: myUser.roles,
         };
 
-        console.log('USUARIO ENVIADO: ', data);
+        await User.updateToken(myUser.id, `JWT ${token}`);
+
+        console.log("USUARIO ENVIADO: ", data);
 
         return res.status(201).json({
           success: true,
           data: data,
-          message: 'El usuario ha sido autenticado',
+          message: "El usuario ha sido autenticado",
         });
       } else {
         return res.status(401).json({
           success: false,
-          message: 'La contraseña es incorrecta',
+          message: "La contraseña es incorrecta",
         });
       }
     } catch (error) {
       console.log(`error: `, error);
       return res.status(501).json({
         success: false,
-        message: 'Error al momento de hacer login',
+        message: "Error al momento de hacer login",
+        error: error,
+      });
+    }
+  },
+
+  async logout(req, res, next) {
+    try {
+      const id = req.body.id;
+      await User.updateToken(id, null);
+
+      return res.status(201).json({
+        success: true,
+        message: "La sesion del usuario se ha cerrado correctamentw",
+      });
+    } catch (error) {
+      console.log(`error: `, error);
+      return res.status(501).json({
+        success: false,
+        message: "Error al momento de cerrar session",
         error: error,
       });
     }

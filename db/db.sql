@@ -1,5 +1,4 @@
 DROP TABLE IF EXISTS roles CASCADE;
-
 CREATE TABLE roles(
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -8,11 +7,8 @@ CREATE TABLE roles(
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL
 );
-
-INSERT INTO
-    roles(name, route, created_at, updated_at)
-VALUES
-    (
+INSERT INTO roles(name, route, created_at, updated_at)
+VALUES (
         'CLIENTE',
         'client/products/list',
         '2021-09-24',
@@ -30,9 +26,7 @@ VALUES
         '2021-09-24',
         '2021-09-24'
     );
-
 DROP TABLE IF EXISTS users CASCADE;
-
 CREATE TABLE users(
     id BIGSERIAL PRIMARY KEY,
     email varchar(255) NOT NULL UNIQUE,
@@ -46,9 +40,7 @@ CREATE TABLE users(
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL
 );
-
 DROP TABLE IF EXISTS user_has_roles CASCADE;
-
 CREATE TABLE user_has_roles(
     id_user BIGSERIAL NOT NULL,
     id_rol BIGSERIAL NOT NULL,
@@ -58,9 +50,29 @@ CREATE TABLE user_has_roles(
     FOREIGN KEY(id_user) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY (id_user, id_rol)
 );
-
-INSERT INTO
-    users (
+DROP TABLE IF EXISTS categories CASCADE;
+CREATE TABLE categories(
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(180) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL
+);
+DROP TABLE IF EXISTS products CASCADE;
+CREATE TABLE products(
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(180) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL,
+    price DECIMAL DEFAULT 0,
+    image1 VARCHAR(255) NOT NULL,
+    image2 VARCHAR(255) NULL,
+    image3 VARCHAR(255) NULL,
+    id_category BIGINT NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
+    FOREIGN KEY(id_category) REFERENCES categories(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+INSERT INTO users (
         email,
         name,
         lastname,
@@ -69,8 +81,7 @@ INSERT INTO
         created_at,
         updated_at
     )
-VALUES
-    (
+VALUES (
         'silverzero55@gmail.com',
         'Emanuel',
         'Vargas',
