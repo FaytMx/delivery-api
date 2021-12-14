@@ -23,6 +23,20 @@ module.exports = {
     try {
       const id = req.params.id;
       const data = await User.findUserId(id);
+      console.log("Repartidores: ", data);
+      return res.status(200).json(data);
+    } catch (error) {
+      console.log("Error: ", error);
+      return res.status(501).json({
+        success: false,
+        message: "Error al obtener los repartidores",
+      });
+    }
+  },
+
+  async findDeliveryMen(req, res, next) {
+    try {
+      const data = await User.findDeliveryMen();
       console.log("Usuario: ", data);
       return res.status(200).json(data);
     } catch (error) {
@@ -143,7 +157,7 @@ module.exports = {
           keys.secretOrKey,
           {
             // expiresIn: (60*60*24)
-            expiresIn: 60 * 2,
+            expiresIn: 60 * 30,
           }
         );
 

@@ -72,6 +72,45 @@ CREATE TABLE products(
     updated_at timestamp NOT NULL,
     FOREIGN KEY(id_category) REFERENCES categories(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+DROP TABLE IF EXISTS address CASCADE;
+CREATE TABLE address(
+    id BIGSERIAL PRIMARY KEY,
+    id_user BigInt NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    neighborhood VARCHAR(255) NOT NULL,
+    lat DECIMAL DEFAULT 0,
+    lng DECIMAL DEFAULT 0,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
+    FOREIGN KEY(id_user) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+DROP TABLE IF EXISTS orders CASCADE;
+CREATE TABLE orders(
+    id BIGSERIAL PRIMARY KEY,
+    id_client BigInt NOT NULL,
+    id_delivery BigInt NULL,
+    id_address BigInt NOT NULL,
+    lat DECIMAL DEFAULT 0,
+    lng DECIMAL DEFAULT 0,
+    status VARCHAR(90) NOT NULL,
+    timestamp BIGINT NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
+    FOREIGN KEY(id_client) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(id_delivery) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(id_address) REFERENCES address(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+DROP TABLE IF EXISTS order_has_products CASCADE;
+CREATE TABLE order_has_products(
+    PRIMARY KEY(id_order, id_product),
+    id_order BigInt NOT NULL,
+    id_product BigInt NOT NULL,
+    quantity BigInt NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
+    FOREIGN KEY(id_order) REFERENCES orders(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(id_product) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
 INSERT INTO users (
         email,
         name,
@@ -90,3 +129,83 @@ VALUES (
         NOW(),
         NOW()
     );
+SELECT P.id,
+    P.name,
+    P.description,
+    P.price,
+    P.image1,
+    P.image2,
+    P.image3,
+    P.id_category
+FROM products as P
+    INNER JOIN categories as C ON p.id_category = c.id
+where C.id = 1;
+SELECT O.id,
+    O.id_client,
+    O.id_address,
+    O.id_delivery,
+    O.status,
+    O.timestamp,
+    JSON_AGG(
+        JSON_BUILD_OBJECT(
+            'id',
+            P.id,
+            'name',
+            P.name,
+            'description',
+            P.description,
+            'price',
+            P.price,
+            'image1',
+            P.image1,
+            'image2',
+            P.image2,
+            'image3',
+            P.image3,
+            'quantity',
+            OHP.quantity
+        )
+    ) as products,
+    JSON_BUILD_OBJECT(
+        'id',
+        U.id,
+        'name',
+        U.name,
+        'lastname',
+        U.lastname,
+        'image',
+        U.image
+    ) as client,
+    JSON_BUILD_OBJECT(
+        'id',
+        U2.id,
+        'name',
+        U2.name,
+        'lastname',
+        U2.lastname,
+        'image',
+        U2.image
+    ) as delivery,
+    JSON_BUILD_OBJECT(
+        'id',
+        A.id,
+        'address',
+        A.address,
+        'neighborhood',
+        A.neighborhood,
+        'lat',
+        A.lat,
+        'lng',
+        A.lng
+    ) as address
+FROM orders AS O
+    INNER JOIN users as U ON O.id_client = U.id
+    LEFT JOIN users as U2 ON O.id_delivery = U2.id
+    INNER JOIN address as A ON A.id = O.id_address
+    INNER join order_has_products as OHP ON OHP.id_order = O.id
+    INNER join products as P ON P.id = OHP.id_product
+WHERE O.status = 'DESPACHADO'
+GROUP BY O.id,
+    U.id,
+    U2.id,
+    A.id
