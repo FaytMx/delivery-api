@@ -14,6 +14,12 @@ module.exports = (app) => {
     OrdersController.findByDeliveryAndStatus
   );
 
+  app.get(
+    '/api/orders/findByClientAndStatus/:id_client/:status',
+    passport.authenticate('jwt', { session: false }),
+    OrdersController.findByClientAndStatus
+  );
+
   app.post(
     '/api/orders/create',
     passport.authenticate('jwt', { session: false }),
@@ -30,5 +36,11 @@ module.exports = (app) => {
     '/api/orders/updateToOnTheWay',
     passport.authenticate('jwt', { session: false }),
     OrdersController.updateToOnTheWay
+  );
+
+  app.put(
+    '/api/orders/updateToDelivery',
+    passport.authenticate('jwt', { session: false }),
+    OrdersController.updateToDelivery
   );
 };

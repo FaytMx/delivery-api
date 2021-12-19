@@ -53,7 +53,7 @@ address(app);
 products(app, upload);
 orders(app);
 
-server.listen(3000, '192.168.1.106' || 'localhost', function () {
+server.listen(3000, '192.168.1.108' || 'localhost', function () {
   console.log('Applicacion de NodeJS ' + process.pid + ' Iniciada...');
 });
 

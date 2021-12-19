@@ -37,6 +37,24 @@ module.exports = {
     }
   },
 
+  async findByClientAndStatus(req, res, next) {
+    try {
+      const id_client = req.params.id_client;
+      const status = req.params.status;
+
+      const data = await Order.findByClientAndStatus(id_client, status);
+
+      return res.status(201).json(data);
+    } catch (error) {
+      console.log('Error: ', error);
+      return res.status(501).json({
+        success: false,
+        message: 'Hubo un error al obtener las ordenes',
+        error: error,
+      });
+    }
+  },
+
   async create(req, res, next) {
     try {
       let order = req.body;
@@ -85,6 +103,26 @@ module.exports = {
     try {
       let order = req.body;
       order.status = 'EN CAMINO';
+      await Order.update(order);
+
+      return res.status(201).json({
+        success: true,
+        message: 'La orden se actualizo correctamente',
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(501).json({
+        success: false,
+        message: 'Hubo un error al actualizar una orden',
+        error: error,
+      });
+    }
+  },
+
+  async updateToDelivery(req, res, next) {
+    try {
+      let order = req.body;
+      order.status = 'ENTREGADO';
       await Order.update(order);
 
       return res.status(201).json({
