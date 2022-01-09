@@ -77,7 +77,7 @@ Order.findByStatus = (status) => {
   return db.manyOrNone(sql, [status]);
 };
 
-Order.findByDeliveryAndStatus = (id_delivery,status) => {
+Order.findByDeliveryAndStatus = (id_delivery, status) => {
   const sql = `SELECT O.id,
               O.id_client,
               O.id_address,
@@ -152,13 +152,15 @@ Order.findByDeliveryAndStatus = (id_delivery,status) => {
   return db.manyOrNone(sql, [id_delivery, status]);
 };
 
-Order.findByClientAndStatus = (id_client,status) => {
+Order.findByClientAndStatus = (id_client, status) => {
   const sql = `SELECT O.id,
               O.id_client,
               O.id_address,
               O.id_delivery,
               O.status,
               O.timestamp,
+              O.lat,
+              O.lng,
               JSON_AGG(
                   JSON_BUILD_OBJECT(
                       'id',
@@ -252,6 +254,12 @@ Order.update = (order) => {
     order.status,
     new Date(),
   ]);
+};
+
+Order.updateLatLng = (order) => {
+  const sql = `UPDATE orders SET lat = $2, lng = $3 WHERE id = $1`;
+
+  return db.none(sql, [order.id, order.lat, order.lng]);
 };
 
 module.exports = Order;

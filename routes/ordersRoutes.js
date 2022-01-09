@@ -43,4 +43,11 @@ module.exports = (app) => {
     passport.authenticate('jwt', { session: false }),
     OrdersController.updateToDelivery
   );
+
+  
+  app.put(
+    '/api/orders/updateLatLng',
+    passport.authenticate('jwt', { session: false }),
+    OrdersController.updateLatLng
+  );
 };
